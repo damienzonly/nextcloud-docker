@@ -1,0 +1,49 @@
+version: "3"
+
+services:
+  redis:
+    image: redis:7.0.4
+    networks:
+      - nextcloud
+  postgres:
+    image: postgres:13
+    networks:
+      - nextcloud
+    env_file:
+      - postgres.env
+    volumes:
+      - postgres:/var/lib/postgresql/data
+  nextcloud:
+    depends_on:
+      - redis
+      - postgres
+    image: nextcloud
+    volumes:
+      - nextcloud-files:/var/www/html
+      - nextcloud-apps:/var/www/html/custom_apps
+      - nextcloud-config:/var/www/html/config
+      - nextcloud-data:/var/www/html/data
+    networks:
+      - nextcloud
+    env_file:
+      - nextcloud.env
+  nginx:
+    depends_on:
+      - nextcloud
+    build:
+      context: nginx
+    ports:
+      - 443:443
+      - 80:80
+    networks:
+      - nextcloud
+
+
+volumes:
+  postgres:
+  nextcloud-files:
+  nextcloud-data:
+  nextcloud-config:
+  nextcloud-apps:
+networks:
+  nextcloud:
